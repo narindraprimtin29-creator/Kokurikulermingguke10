@@ -1,0 +1,1882 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Petualangan Peneliti Cilik - Mengukur & Menganalisis Pertumbuhan Tanaman</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Canvas Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            user-select: none;
+        }
+        .font-heading {
+            font-family: 'Fredoka', cursive, sans-serif;
+        }
+        
+        /* Custom animations */
+        @keyframes floatSlow {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        @keyframes pulseGlow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(74, 222, 128, 0.6)); }
+            50% { filter: drop-shadow(0 0 25px rgba(250, 204, 21, 0.9)); }
+        }
+        @keyframes bounceLight {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        
+        .animate-float { animation: floatSlow 4s ease-in-out infinite; }
+        .animate-glow { animation: pulseGlow 2.5s infinite; }
+        .animate-bounce-light { animation: bounceLight 2s infinite; }
+        
+        /* Pattern Backgrounds */
+        .bg-lab-pattern {
+            background-color: #ecfdf5;
+            background-image: radial-gradient(#10b981 0.75px, transparent 0.75px), radial-gradient(#06b6d4 0.75px, #ecfdf5 0.75px);
+            background-size: 30px 30px;
+            background-position: 0 0, 15px 15px;
+        }
+
+        /* Certificate Print Styling */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #certificateArea, #certificateArea * {
+                visibility: visible;
+            }
+            #certificateArea {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none !important;
+                border: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            @page {
+                size: A4 landscape;
+                margin: 0;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #10b981;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #059669;
+        }
+    </style>
+</head>
+<body class="bg-lab-pattern min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden">
+
+    <!-- TOP NAVBAR -->
+    <header id="topNavbar" class="bg-white/90 backdrop-blur-md border-b-4 border-emerald-500 sticky top-0 z-40 shadow-sm transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3 cursor-pointer" onclick="goHomeIfAllowed()">
+                <div class="w-11 h-11 bg-gradient-to-tr from-emerald-500 to-teal-400 rounded-2xl flex items-center justify-center text-white text-2xl shadow-md transform hover:rotate-6 transition-transform">
+                    <i class="fa-solid fa-seedling"></i>
+                </div>
+                <div>
+                    <h1 class="font-heading text-lg md:text-xl font-bold text-emerald-800 leading-tight">PETUALANGAN PENELITI CILIK</h1>
+                    <p class="text-xs text-emerald-600 font-semibold hidden sm:block">Kokurikuler Kelas 6 SD - Pengukuran & Analisis Tanaman</p>
+                </div>
+            </div>
+
+            <!-- Header Controls & Badges -->
+            <div class="flex items-center gap-2 md:gap-4">
+                <!-- User Tag -->
+                <div id="navUserBadge" class="hidden sm:flex items-center gap-2 bg-emerald-50 text-emerald-700 px-3 py-1.5 rounded-full border border-emerald-200 text-xs font-bold">
+                    <i class="fa-solid fa-user-astronaut"></i>
+                    <span id="navUserName">Siswa</span>
+                </div>
+
+                <!-- Audio Toggle Button -->
+                <button id="btnSoundToggle" onclick="toggleAudio()" class="w-10 h-10 bg-amber-100 hover:bg-amber-200 text-amber-700 rounded-xl flex items-center justify-center transition shadow-sm font-bold" title="Matikan/Aktifkan Suara">
+                    <i id="soundIcon" class="fa-solid fa-volume-high"></i>
+                </button>
+
+                <!-- Help Instructions Button -->
+                <button onclick="openInstructionsModal()" class="w-10 h-10 bg-cyan-100 hover:bg-cyan-200 text-cyan-700 rounded-xl flex items-center justify-center transition shadow-sm font-bold" title="Petunjuk Permainan">
+                    <i class="fa-solid fa-circle-question"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN CONTAINER FOR ALL SCREENS -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-3 sm:p-6 flex flex-col justify-center">
+
+        <!-- SCREEN 1: WELCOME / HOME SCREEN -->
+        <section id="screenHome" class="space-y-8 py-4">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+                <!-- Left Banner & Mascot -->
+                <div class="lg:col-span-7 space-y-6 text-center lg:text-left">
+                    <div class="inline-flex items-center gap-2 bg-emerald-100 text-emerald-800 px-4 py-2 rounded-full font-semibold text-sm border border-emerald-300 animate-bounce-light">
+                        <i class="fa-solid fa-flask-vial text-emerald-600"></i> Laboratorium Sains & Kebun Sekolah
+                    </div>
+                    
+                    <h1 class="font-heading text-3xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
+                        Ukur, Amati, Analisis & Temukan <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-600">Keajaiban Pertumbuhan!</span>
+                    </h1>
+                    
+                    <p class="text-slate-600 text-base sm:text-lg leading-relaxed max-w-2xl">
+                        Selamat datang Peneliti Cilik! Mari asah <strong class="text-emerald-700">Penalaran Kritis</strong> dan <strong class="text-teal-700">Kemandirianmu</strong>. Bantu Prof. Flora mengukur tinggi bibit, membaca skala mm & cm, serta menganalisis grafik pertumbuhan tanaman hingga panen!
+                    </p>
+
+                    <!-- Mascot Graphic Card -->
+                    <div class="bg-white/80 backdrop-blur rounded-3xl p-5 border-2 border-emerald-100 shadow-lg flex items-center gap-4 max-w-xl mx-auto lg:mx-0">
+                        <div class="w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 rounded-2xl flex items-center justify-center text-4xl shadow-inner animate-float flex-shrink-0">
+                            👨‍🔬
+                        </div>
+                        <div class="text-left text-sm text-slate-700">
+                            <span class="font-bold text-emerald-700 font-heading block text-base">Prof. Flora berkata:</span>
+                            "Peneliti yang hebat selalu teliti melihat titik nol penggaris dan mencatat data dengan jujur. Siapkan kaca pembesarmu!"
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Form Box -->
+                <div class="lg:col-span-5">
+                    <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-4 border-emerald-400 relative overflow-hidden">
+                        <div class="absolute -right-8 -top-8 w-24 h-24 bg-yellow-200 rounded-full opacity-50 blur-xl"></div>
+                        
+                        <div class="text-center mb-6">
+                            <h2 class="font-heading text-2xl font-bold text-emerald-900">IDENTITAS PENELITI</h2>
+                            <p class="text-slate-500 text-xs mt-1">Isi data dirimu sebelum memulai riset lapangan!</p>
+                        </div>
+
+                        <form id="formStudent" onsubmit="event.preventDefault(); startAdventure();" class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Lengkap Siswa <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-user-pen absolute left-4 top-3.5 text-slate-400"></i>
+                                    <input type="text" id="inputStudentName" required placeholder="Contoh: Budi Santoso" class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-emerald-500 focus:bg-white focus:outline-none transition font-semibold text-slate-800">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Nama Sekolah <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-school absolute left-4 top-3.5 text-slate-400"></i>
+                                    <input type="text" id="inputSchoolName" required placeholder="Contoh: SD Negeri Nusantara 01" class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-emerald-500 focus:bg-white focus:outline-none transition font-semibold text-slate-800">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Kelas <span class="text-red-500">*</span></label>
+                                <div class="relative">
+                                    <i class="fa-solid fa-graduation-cap absolute left-4 top-3.5 text-slate-400"></i>
+                                    <select id="inputStudentClass" required class="w-full pl-11 pr-4 py-3 bg-slate-50 border-2 border-slate-200 rounded-2xl focus:border-emerald-500 focus:bg-white focus:outline-none transition font-semibold text-slate-800">
+                                        <option value="6 A">Kelas 6 A</option>
+                                        <option value="6 B">Kelas 6 B</option>
+                                        <option value="6 C">Kelas 6 C</option>
+                                        <option value="6 D">Kelas 6 D</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Action Buttons -->
+                            <div class="pt-4 space-y-3">
+                                <button type="submit" class="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:from-emerald-600 hover:to-teal-700 text-white font-heading font-bold text-lg rounded-2xl shadow-xl hover:shadow-2xl transform hover:-translate-y-0.5 transition flex items-center justify-center gap-3 border-b-4 border-emerald-700">
+                                    <i class="fa-solid fa-rocket text-xl"></i>
+                                    MULAI PETUALANGAN (50 SOAL)
+                                </button>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <button type="button" onclick="openMateriScreen()" class="py-3 px-4 bg-amber-400 hover:bg-amber-500 text-amber-950 font-heading font-bold rounded-2xl shadow transition flex items-center justify-center gap-2 text-sm border-b-4 border-amber-600">
+                                        <i class="fa-solid fa-book-open"></i> MATERI BELAJAR
+                                    </button>
+                                    <button type="button" onclick="openInstructionsModal()" class="py-3 px-4 bg-cyan-100 hover:bg-cyan-200 text-cyan-800 font-heading font-bold rounded-2xl shadow transition flex items-center justify-center gap-2 text-sm border-b-4 border-cyan-300">
+                                        <i class="fa-solid fa-lightbulb"></i> PETUNJUK
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Target Learning Badges -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-6">
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-xl font-bold">1</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">Alat Ukur Baku</h4>
+                        <p class="text-xs text-slate-500">Membaca skala penggaris & meteran secara teliti.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-teal-100 text-teal-600 flex items-center justify-center text-xl font-bold">2</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">Konversi CM & MM</h4>
+                        <p class="text-xs text-slate-500">Mahir mengubah hubungan 1 cm = 10 mm.</p>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+                    <div class="w-12 h-12 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center text-xl font-bold">3</div>
+                    <div>
+                        <h4 class="font-bold text-slate-800 text-sm">Analisis Tabel Data</h4>
+                        <p class="text-xs text-slate-500">Menghitung pertambahan tinggi & menarik kesimpulan.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 2: MATERI BELAJAR INTERAKTIF (5 MODULES) -->
+        <section id="screenMateri" class="hidden space-y-6">
+            <!-- Header Bar Materi -->
+            <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <button onclick="showScreen('screenHome')" class="w-10 h-10 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-arrow-left"></i>
+                    </button>
+                    <div>
+                        <h2 class="font-heading text-xl font-bold text-emerald-900">MODUL MATERI PENELITI CILIK</h2>
+                        <p class="text-xs text-slate-500">Pelajari 5 Modul Utama Sebelum Bertualang!</p>
+                    </div>
+                </div>
+
+                <!-- Module Selection Tabs -->
+                <div id="moduleTabs" class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-2xl">
+                    <button onclick="switchModule(1)" class="mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow" id="tabMod1">Modul 1</button>
+                    <button onclick="switchModule(2)" class="mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 hover:text-emerald-700" id="tabMod2">Modul 2</button>
+                    <button onclick="switchModule(3)" class="mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 hover:text-emerald-700" id="tabMod3">Modul 3</button>
+                    <button onclick="switchModule(4)" class="mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 hover:text-emerald-700" id="tabMod4">Modul 4</button>
+                    <button onclick="switchModule(5)" class="mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 hover:text-emerald-700" id="tabMod5">Modul 5</button>
+                </div>
+            </div>
+
+            <!-- Content Area Modules -->
+            <div class="bg-white rounded-3xl p-6 md:p-8 shadow-xl border-2 border-emerald-100 min-h-[450px] flex flex-col justify-between">
+                
+                <!-- MODULE 1 -->
+                <div id="moduleContent1" class="module-body space-y-6">
+                    <div class="border-b pb-4 border-slate-100">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">MODUL 1</span>
+                        <h3 class="font-heading text-2xl font-bold text-slate-800 mt-2">Mengenal Pengukuran Tinggi Tanaman</h3>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center">
+                        <div class="space-y-3 text-slate-600 text-sm leading-relaxed">
+                            <p>🌱 <strong>Pengukuran</strong> adalah kegiatan membandingkan suatu besaran (seperti panjang/tinggi) dengan alat ukur baku yang telah disepakati standar internasionalnya.</p>
+                            <p>📏 <strong>Tinggi Tanaman</strong> diukur dari <em>pangkal batang</em> (perbatasan permukaan tanah) sampai <em>titik tumbuh tertinggi</em> (pucuk daun teratas).</p>
+                            <div class="bg-amber-50 p-4 rounded-2xl border-l-4 border-amber-400 text-xs space-y-1">
+                                <strong class="text-amber-900 block font-bold">⚠️ Hindari Kesalahan Paralaks:</strong>
+                                <p>Posisi mata harus tegak lurus (90°) tepat di atas angka garis skala yang dibaca, bukan miring dari atas atau samping!</p>
+                            </div>
+                        </div>
+                        <div class="bg-emerald-50 rounded-2xl p-6 border border-emerald-200 text-center relative overflow-hidden">
+                            <div class="text-6xl mb-3">🪴</div>
+                            <div class="inline-block bg-white px-4 py-2 rounded-xl shadow-sm text-xs font-bold text-emerald-800">
+                                Titik Pengukuran: Pangkal Tanah ➔ Pucuk Teratas
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 2 -->
+                <div id="moduleContent2" class="module-body hidden space-y-6">
+                    <div class="border-b pb-4 border-slate-100">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">MODUL 2</span>
+                        <h3 class="font-heading text-2xl font-bold text-slate-800 mt-2">Mengenal Alat Ukur Baku (Penggaris & Meteran)</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-emerald-800 flex items-center gap-2 mb-2"><i class="fa-solid fa-ruler"></i> Penggaris (Mistar)</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">Cocok untuk kecambah dan tanaman kecil (tinggi &lt; 30 cm). Tingkat ketelitian 1 mm (0,1 cm).</p>
+                            <div class="bg-white p-3 rounded-xl border text-center text-xs font-mono font-bold text-slate-700">
+                                Angka 0 diletakkan TEPAT di pangkal batang!
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-200">
+                            <h4 class="font-bold text-teal-800 flex items-center gap-2 mb-2"><i class="fa-solid fa-tape"></i> Meteran Pita / Gulung</h4>
+                            <p class="text-xs text-slate-600 leading-relaxed mb-3">Digunakan untuk tanaman yang lebih tinggi (&gt; 30 cm) seperti jagung, singkong, atau pohon buah.</p>
+                            <div class="bg-white p-3 rounded-xl border text-center text-xs font-mono font-bold text-slate-700">
+                                Bahan fleksibel mengikuti lekuk batang tanaman!
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Interactive Measurement Simulator -->
+                    <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 space-y-3">
+                        <h4 class="font-bold text-xs uppercase tracking-wider text-emerald-800">Simulasi Interaktif: Letakkan Penggaris Virtual</h4>
+                        <div class="flex items-center gap-4">
+                            <input type="range" id="simRulerVal" min="1" max="20" value="8" oninput="updateRulerSim()" class="w-full accent-emerald-600 cursor-pointer">
+                            <span id="simRulerText" class="font-mono font-bold text-emerald-800 bg-white px-3 py-1 rounded-lg border border-emerald-300 text-sm whitespace-nowrap">8 cm = 80 mm</span>
+                        </div>
+                        <div class="relative h-16 bg-amber-100 rounded-xl overflow-hidden border border-amber-300 flex items-center px-4">
+                            <div id="simRulerBar" class="h-6 bg-emerald-500 rounded-lg transition-all duration-300 flex items-center justify-end pr-2 text-white text-xs font-bold" style="width: 40%;">
+                                🌱 8 cm
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 3 -->
+                <div id="moduleContent3" class="module-body hidden space-y-6">
+                    <div class="border-b pb-4 border-slate-100">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">MODUL 3</span>
+                        <h3 class="font-heading text-2xl font-bold text-slate-800 mt-2">Membaca & Membandingkan Satuan CM dan MM</h3>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                        <div class="bg-gradient-to-b from-emerald-50 to-white p-4 rounded-2xl border border-emerald-200">
+                            <span class="text-xs text-slate-500 block font-bold">RUMUS UTAMA</span>
+                            <span class="text-xl font-bold text-emerald-700 font-mono">1 cm = 10 mm</span>
+                            <span class="text-xs text-emerald-600 block mt-1">(Dikalikan 10)</span>
+                        </div>
+                        <div class="bg-gradient-to-b from-teal-50 to-white p-4 rounded-2xl border border-teal-200">
+                            <span class="text-xs text-slate-500 block font-bold">KONVERSI SEBALIKNYA</span>
+                            <span class="text-xl font-bold text-teal-700 font-mono">1 mm = 0,1 cm</span>
+                            <span class="text-xs text-teal-600 block mt-1">(Dibagi 10)</span>
+                        </div>
+                        <div class="bg-gradient-to-b from-cyan-50 to-white p-4 rounded-2xl border border-cyan-200">
+                            <span class="text-xs text-slate-500 block font-bold">CONTOH CEPAT</span>
+                            <span class="text-sm font-bold text-cyan-800 block mt-1">25 cm = 250 mm</span>
+                            <span class="text-sm font-bold text-cyan-800 block">120 mm = 12 cm</span>
+                        </div>
+                    </div>
+
+                    <!-- Calculator Practice -->
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
+                        <h4 class="font-bold text-slate-700">Latihan Konversi Kilat:</h4>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span>Berapa mm untuk 15,5 cm?</span>
+                            <input type="number" id="practiceCmInput" placeholder="Masukkan angka" class="px-3 py-1 border rounded-lg w-32 focus:outline-none">
+                            <button onclick="checkPracticeCm()" class="bg-emerald-600 text-white px-3 py-1 rounded-lg font-bold">Cek Hasil</button>
+                            <span id="practiceCmFeedback" class="font-bold"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 4 -->
+                <div id="moduleContent4" class="module-body hidden space-y-6">
+                    <div class="border-b pb-4 border-slate-100">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">MODUL 4</span>
+                        <h3 class="font-heading text-2xl font-bold text-slate-800 mt-2">Mengamati Pertumbuhan & Pertambahan Tinggi Tanaman</h3>
+                    </div>
+
+                    <div class="space-y-4 text-sm text-slate-600">
+                        <p>🌱 <strong>Pertumbuhan</strong> Ditandai dengan pertambahan ukuran, tinggi, volume, dan jumlah daun yang bersifat tidak dapat balik (irreversible).</p>
+                        
+                        <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200">
+                            <h4 class="font-bold text-emerald-900 text-sm mb-2">💡 Cara Menghitung Pertambahan Tinggi:</h4>
+                            <p class="font-mono bg-white p-3 rounded-xl border border-emerald-300 text-emerald-800 text-xs md:text-sm">
+                                Pertambahan Tinggi = Tinggi Akhir Pengamatan - Tinggi Awal Pengamatan
+                            </p>
+                            <div class="mt-2 text-xs text-slate-600 space-y-1">
+                                <p>• Hari ke-1: 5 cm</p>
+                                <p>• Hari ke-7: 16 cm</p>
+                                <p>• Pertambahan = 16 cm - 5 cm = <strong>11 cm</strong> (atau 110 mm).</p>
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs font-semibold">
+                            <div class="bg-slate-100 p-2 rounded-xl">☀️ Sinar Matahari</div>
+                            <div class="bg-slate-100 p-2 rounded-xl">💧 Air Cukup</div>
+                            <div class="bg-slate-100 p-2 rounded-xl">🧪 Unsur Hara</div>
+                            <div class="bg-slate-100 p-2 rounded-xl">🌬️ Udara Clean</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MODULE 5 -->
+                <div id="moduleContent5" class="module-body hidden space-y-6">
+                    <div class="border-b pb-4 border-slate-100">
+                        <span class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full">MODUL 5</span>
+                        <h3 class="font-heading text-2xl font-bold text-slate-800 mt-2">Menyajikan Data Pertumbuhan dalam Tabel Sederhana</h3>
+                    </div>
+
+                    <p class="text-xs sm:text-sm text-slate-600">Tabel memudahkan peneliti cilik melihat pola pertumbuhan dari hari ke hari dan membandingkan tanaman perlakuan berbeda.</p>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs sm:text-sm border-collapse rounded-xl overflow-hidden shadow-sm">
+                            <thead>
+                                <tr class="bg-emerald-600 text-white font-heading">
+                                    <th class="p-3">Hari Pengamatan</th>
+                                    <th class="p-3">Tinggi Tanaman A (Terang)</th>
+                                    <th class="p-3">Tinggi Tanaman B (Gelap)</th>
+                                    <th class="p-3">Catatan Kondisi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100 bg-slate-50">
+                                <tr>
+                                    <td class="p-3 font-semibold">Hari ke-1</td>
+                                    <td class="p-3">2 cm (20 mm)</td>
+                                    <td class="p-3">2 cm (20 mm)</td>
+                                    <td class="p-3 text-slate-500">Biji mulai berkecambah</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold">Hari ke-3</td>
+                                    <td class="p-3">5 cm (50 mm)</td>
+                                    <td class="p-3">7 cm (70 mm)</td>
+                                    <td class="p-3 text-slate-500">Tanaman B mengalami etiolasi (pucat)</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold">Hari ke-5</td>
+                                    <td class="p-3">9 cm (90 mm)</td>
+                                    <td class="p-3">11 cm (110 mm)</td>
+                                    <td class="p-3 text-slate-500">Tanaman A daunnya hijau segar dan tebal</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-3 font-semibold">Hari ke-7</td>
+                                    <td class="p-3 font-bold text-emerald-700">14 cm (140 mm)</td>
+                                    <td class="p-3 font-bold text-amber-700">13 cm (130 mm)</td>
+                                    <td class="p-3 text-slate-500">Tanaman B batang lemah & layu</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-cyan-50 p-3 rounded-xl border border-cyan-200 text-xs text-cyan-900 font-medium">
+                        📊 <strong>Kesimpulan Data:</strong> Tanaman A di tempat terang bertumbuh lebih kokoh, berwarna hijau sehat, dan memiliki laju pertumbuhan stabil dibandingkan Tanaman B di tempat gelap.
+                    </div>
+                </div>
+
+                <!-- Footer Navigation inside Materi -->
+                <div class="pt-6 border-t border-slate-100 flex items-center justify-between">
+                    <button id="btnPrevMod" onclick="navigateModule(-1)" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-2">
+                        <i class="fa-solid fa-chevron-left"></i> SEBELUMNYA
+                    </button>
+
+                    <button onclick="showScreen('screenHome')" class="px-4 py-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold text-xs rounded-xl transition">
+                        KEMBALI KE MENU
+                    </button>
+
+                    <button id="btnNextMod" onclick="navigateModule(1)" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow transition flex items-center gap-2">
+                        SELANJUTNYA <i class="fa-solid fa-chevron-right"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 3: PETUALANGAN PENELITI (QUIZ GAMEPLAY) -->
+        <section id="screenQuiz" class="hidden space-y-5">
+            <!-- HUD Stats & Level Header -->
+            <div class="bg-white rounded-3xl p-4 sm:p-5 shadow-lg border-2 border-emerald-100 grid grid-cols-2 md:grid-cols-5 gap-3 items-center">
+                <!-- Level Badge -->
+                <div class="col-span-2 md:col-span-1 flex items-center gap-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white p-2.5 rounded-2xl shadow-sm">
+                    <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center font-bold text-lg" id="hudLevelNum">L1</div>
+                    <div>
+                        <span class="text-[10px] opacity-80 uppercase tracking-widest font-bold block">LEVEL AKTIF</span>
+                        <h4 class="text-xs font-bold font-heading truncate" id="hudLevelTitle">Detektif Alat Ukur</h4>
+                    </div>
+                </div>
+
+                <!-- Score Counter -->
+                <div class="bg-amber-50 p-2.5 rounded-2xl border border-amber-200 text-center">
+                    <span class="text-[10px] font-bold text-amber-700 uppercase block">SKOR TOTAL</span>
+                    <span class="text-lg font-extrabold text-amber-900 font-heading" id="hudScore">0 / 500</span>
+                </div>
+
+                <!-- Correct & Wrong Counters -->
+                <div class="bg-emerald-50 p-2.5 rounded-2xl border border-emerald-200 text-center">
+                    <span class="text-[10px] font-bold text-emerald-700 uppercase block">BENAR / SALAH</span>
+                    <span class="text-lg font-extrabold text-emerald-900 font-heading">
+                        <span id="hudCorrect" class="text-emerald-600">0</span> / <span id="hudWrong" class="text-red-500">0</span>
+                    </span>
+                </div>
+
+                <!-- Stars Collector -->
+                <div class="bg-yellow-50 p-2.5 rounded-2xl border border-yellow-200 text-center">
+                    <span class="text-[10px] font-bold text-yellow-700 uppercase block">BINTANG PENELITI</span>
+                    <div class="flex justify-center gap-1 text-amber-400 text-sm" id="hudStars">
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                        <i class="fa-solid fa-star"></i>
+                    </div>
+                </div>
+
+                <!-- Lifeline 50:50 -->
+                <div class="col-span-2 md:col-span-1 flex items-center justify-center">
+                    <button id="btnLifeline" onclick="useLifeline5050()" class="w-full py-2 px-3 bg-cyan-500 hover:bg-cyan-600 text-white font-bold text-xs rounded-2xl shadow transition flex items-center justify-center gap-2 border-b-2 border-cyan-700">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> 50:50 (<span id="lifelineCount">3</span>)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="bg-white p-3 rounded-2xl shadow-sm border border-slate-100 space-y-1.5">
+                <div class="flex justify-between items-center text-xs font-bold text-slate-600">
+                    <span>SOAL NOMOR: <span id="hudQIndex" class="text-emerald-700 font-heading text-sm">1</span> / 50</span>
+                    <span id="hudProgressPercent" class="text-emerald-600">2%</span>
+                </div>
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                    <div id="hudProgressBar" class="bg-gradient-to-r from-emerald-400 via-teal-500 to-cyan-500 h-full rounded-full transition-all duration-500" style="width: 2%;"></div>
+                </div>
+            </div>
+
+            <!-- QUESTION CARD -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-emerald-100 space-y-6 relative overflow-hidden">
+                <!-- Question Visual Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                    <span id="qTagCategory" class="bg-emerald-100 text-emerald-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                        C1 - Pemahaman Alat Ukur
+                    </span>
+
+                    <div class="flex items-center gap-2">
+                        <!-- Read Question Button -->
+                        <button onclick="readQuestionSpeech()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-xl font-bold text-xs flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-volume-high"></i> Baca Soal
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Question Prompt -->
+                <div class="space-y-3">
+                    <h3 id="questionText" class="text-lg sm:text-xl font-bold text-slate-800 leading-relaxed font-heading">
+                        Loading pertanyaan...
+                    </h3>
+
+                    <!-- Optional Dynamic Table or Graphic for Question -->
+                    <div id="qVisualContainer" class="hidden bg-slate-50 p-4 rounded-2xl border border-slate-200 overflow-x-auto text-xs">
+                        <!-- Injected via JS when question requires a table/graphic -->
+                    </div>
+                </div>
+
+                <!-- Answer Options Grid -->
+                <div id="optionsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 pt-2">
+                    <!-- Options injected dynamically via JS -->
+                </div>
+
+                <!-- Feedback Explanation Overlay / Box -->
+                <div id="feedbackBox" class="hidden p-5 rounded-2xl border-2 transition-all space-y-3">
+                    <div class="flex items-start gap-3">
+                        <div id="feedbackIcon" class="w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-xl flex-shrink-0"></div>
+                        <div class="space-y-1">
+                            <h4 id="feedbackTitle" class="font-bold text-base font-heading">Jawaban Benar!</h4>
+                            <p id="feedbackText" class="text-xs sm:text-sm text-slate-700 leading-relaxed">Pembahasan penjelasan jawaban...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end pt-2">
+                        <button id="btnNextQuestion" onclick="nextQuestion()" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold text-sm rounded-xl shadow-lg transition flex items-center gap-2 border-b-2 border-emerald-800">
+                            LANJUTKAN <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mascot Speech Bar -->
+            <div class="bg-gradient-to-r from-emerald-800 to-teal-900 text-white p-4 rounded-2xl shadow-md flex items-center gap-4">
+                <div class="text-3xl">👨‍🔬</div>
+                <p id="mascotSpeech" class="text-xs sm:text-sm font-medium italic">
+                    "Baca setiap angka skala dengan teliti ya! Pastikan posisi penggaris lurus dari angka 0."
+                </p>
+            </div>
+        </section>
+
+        <!-- SCREEN 4: LEVEL UP MODAL -->
+        <div id="modalLevelUp" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl p-8 max-w-md w-full text-center shadow-2xl border-4 border-yellow-400 space-y-5 animate-float">
+                <div class="w-20 h-20 bg-gradient-to-tr from-yellow-400 to-amber-300 rounded-full flex items-center justify-center text-4xl shadow-inner mx-auto">
+                    🏆
+                </div>
+                <div class="space-y-2">
+                    <span class="bg-amber-100 text-amber-800 text-xs font-bold px-3 py-1 rounded-full uppercase">PENCAPAIAN LEVEL!</span>
+                    <h3 class="font-heading text-2xl font-bold text-slate-800" id="lvlUpTitle">LEVEL 1 SELESAI!</h3>
+                    <p class="text-xs text-slate-600" id="lvlUpSub">Kamu berhasil menyelesaikan 10 tantangan pertama dengan sangat teliti!</p>
+                </div>
+                <div class="bg-emerald-50 p-4 rounded-2xl border border-emerald-200 text-xs font-bold text-emerald-800 space-y-1">
+                    <p>Skor Terkumpul Saat Ini: <span id="lvlUpScore" class="text-lg font-heading text-emerald-600">100</span> Poin</p>
+                    <p class="text-[11px] text-slate-500 font-normal">Siapkan dirimu untuk tantangan berikutnya!</p>
+                </div>
+                <button onclick="closeLevelUpModal()" class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-heading font-bold text-base rounded-2xl shadow-lg hover:from-emerald-600 hover:to-teal-700 transition">
+                    LANJUT KE LEVEL BERIKUTNYA <i class="fa-solid fa-circle-play ml-1"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- SCREEN 5: HASIL AKHIR & EVALUASI -->
+        <section id="screenResults" class="hidden space-y-6 py-4">
+            <!-- Summary Banner -->
+            <div class="bg-white rounded-3xl p-6 sm:p-8 shadow-xl border-4 border-emerald-400 text-center space-y-6 relative overflow-hidden">
+                <div class="inline-block bg-emerald-100 text-emerald-800 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider uppercase">
+                    🎉 PETUALANGAN SELESAI!
+                </div>
+
+                <h2 class="font-heading text-3xl sm:text-4xl font-extrabold text-slate-800" id="resStudentName">
+                    Selamat, Budi Santoso!
+                </h2>
+                
+                <p class="text-sm text-slate-600" id="resSchoolInfo">SD Negeri Nusantara 01 • Kelas 6 A</p>
+
+                <!-- Big Score Card -->
+                <div class="max-w-md mx-auto bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-600 text-white p-6 rounded-3xl shadow-lg border-4 border-white space-y-2">
+                    <span class="text-xs uppercase font-bold tracking-widest opacity-80">NILAI AKHIR PENELITI</span>
+                    <div class="text-5xl font-extrabold font-heading" id="resFinalScore">480 / 500</div>
+                    <div class="text-sm font-bold bg-white/20 py-1 px-3 rounded-full inline-block" id="resPercentage">Persentase: 96%</div>
+                </div>
+
+                <!-- Predicate Tag -->
+                <div class="inline-block bg-yellow-100 border-2 border-yellow-400 text-yellow-900 px-6 py-3 rounded-2xl font-heading font-extrabold text-lg shadow-sm" id="resPredicate">
+                    🏆 PENELITI CILIK BERPRESTASI
+                </div>
+
+                <!-- Stats Breakdown Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-left">
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <span class="text-xs text-slate-500 font-bold block">Jawaban Benar</span>
+                        <span class="text-xl font-bold text-emerald-600 font-heading" id="resCorrect">48 Soal</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <span class="text-xs text-slate-500 font-bold block">Jawaban Salah</span>
+                        <span class="text-xl font-bold text-red-500 font-heading" id="resWrong">2 Soal</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <span class="text-xs text-slate-500 font-bold block">Bintang Diperoleh</span>
+                        <span class="text-xl font-bold text-amber-500 font-heading" id="resStars">3 / 3</span>
+                    </div>
+                    <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200">
+                        <span class="text-xs text-slate-500 font-bold block">Waktu Pengerjaan</span>
+                        <span class="text-xl font-bold text-cyan-600 font-heading" id="resTime">12m 45s</span>
+                    </div>
+                </div>
+
+                <!-- Learning Competencies Matrix -->
+                <div class="bg-emerald-50 p-5 rounded-2xl border border-emerald-200 text-left space-y-3">
+                    <h4 class="font-bold text-emerald-900 text-sm font-heading flex items-center gap-2">
+                        <i class="fa-solid fa-chart-pie"></i> CAPAIAN TUJUAN PEMBELAJARAN (KOKURIKULER)
+                    </h4>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                        <div class="bg-white p-3 rounded-xl border border-emerald-100 space-y-1">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>1. Penggunaan Alat Ukur Baku</span>
+                                <span id="comp1Val" class="text-emerald-700">100%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="comp1Bar" class="bg-emerald-500 h-full rounded-full" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-3 rounded-xl border border-emerald-100 space-y-1">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>2. Konversi Satuan CM & MM</span>
+                                <span id="comp2Val" class="text-emerald-700">90%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="comp2Bar" class="bg-emerald-500 h-full rounded-full" style="width: 90%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-3 rounded-xl border border-emerald-100 space-y-1">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>3. Pengamatan Pertumbuhan</span>
+                                <span id="comp3Val" class="text-emerald-700">100%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="comp3Bar" class="bg-emerald-500 h-full rounded-full" style="width: 100%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-3 rounded-xl border border-emerald-100 space-y-1">
+                            <div class="flex justify-between font-bold text-slate-700">
+                                <span>4. Analisis Data & Tabel (HOTS)</span>
+                                <span id="comp4Val" class="text-emerald-700">95%</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div id="comp4Bar" class="bg-emerald-500 h-full rounded-full" style="width: 95%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    <button onclick="showCertificateScreen()" class="py-3 px-6 bg-gradient-to-r from-amber-500 to-yellow-500 hover:from-amber-600 hover:to-yellow-600 text-slate-950 font-heading font-extrabold text-sm rounded-2xl shadow-lg transition flex items-center gap-2 border-b-4 border-amber-700">
+                        <i class="fa-solid fa-award text-lg"></i> LIHAT SERTIFIKAT DIGITAL
+                    </button>
+
+                    <button onclick="openReviewModal()" class="py-3 px-6 bg-cyan-600 hover:bg-cyan-700 text-white font-heading font-bold text-sm rounded-2xl shadow transition flex items-center gap-2 border-b-4 border-cyan-800">
+                        <i class="fa-solid fa-clipboard-list text-lg"></i> LAPORAN HASIL JAWABAN
+                    </button>
+
+                    <button onclick="resetGameAndPlayAgain()" class="py-3 px-6 bg-slate-700 hover:bg-slate-800 text-white font-heading font-bold text-sm rounded-2xl shadow transition flex items-center gap-2 border-b-4 border-slate-900">
+                        <i class="fa-solid fa-rotate-right text-lg"></i> MAIN LAGI
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- SCREEN 6: DIGITAL CERTIFICATE PAGE -->
+        <section id="screenCertificate" class="hidden space-y-6 py-4">
+            <!-- Controls Bar outside certificate -->
+            <div class="no-print bg-white rounded-2xl p-4 shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-4">
+                <button onclick="showScreen('screenResults')" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left"></i> KEMBALI KE REKAP
+                </button>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="window.print()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold text-xs rounded-xl shadow transition flex items-center gap-2 border-b-2 border-emerald-800">
+                        <i class="fa-solid fa-print"></i> CETAK SERTIFIKAT / SIMPAN PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- CERTIFICATE DISPLAY AREA (A4 LANDSCAPE RATIO) -->
+            <div id="certificateArea" class="bg-white rounded-3xl p-8 sm:p-12 shadow-2xl border-[12px] border-emerald-700 relative overflow-hidden max-w-4xl mx-auto my-0 text-slate-800" style="min-height: 580px;">
+                <!-- Decorative Outer Gold Border -->
+                <div class="absolute inset-2 border-2 border-amber-400 pointer-events-none rounded-2xl"></div>
+                <div class="absolute inset-3 border border-emerald-200 pointer-events-none rounded-2xl"></div>
+
+                <!-- Decorative Background Plant Watermark -->
+                <div class="absolute -right-16 -bottom-16 opacity-5 text-emerald-900 text-9xl pointer-events-none">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+
+                <div class="relative z-10 text-center space-y-5">
+                    <!-- Header Badges -->
+                    <div class="flex justify-between items-center px-4">
+                        <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                            <i class="fa-solid fa-microscope text-lg"></i> KELAS 6 SD
+                        </div>
+                        <div class="text-amber-500 text-2xl">
+                            <i class="fa-solid fa-medal"></i>
+                        </div>
+                        <div class="flex items-center gap-2 text-emerald-800 font-bold text-xs">
+                            KOKURIKULER SAINS <i class="fa-solid fa-dna text-lg"></i>
+                        </div>
+                    </div>
+
+                    <!-- Certificate Title -->
+                    <div class="space-y-1">
+                        <h1 class="font-heading text-3xl sm:text-4xl font-extrabold text-emerald-900 tracking-wide uppercase">
+                            SERTIFIKAT PENGHARGAAN
+                        </h1>
+                        <p class="text-xs font-bold text-amber-600 tracking-widest uppercase">
+                            PENELITI CILIK BERPRESTASI DENGAN PENALARAN KRITIS & KEMANDIRIAN
+                        </p>
+                    </div>
+
+                    <!-- Recipient Text -->
+                    <div class="space-y-2 pt-2">
+                        <p class="text-xs text-slate-500 uppercase font-semibold">Sertifikat ini secara resmi diberikan kepada:</p>
+                        <h2 id="certStudentName" class="font-heading text-2xl sm:text-3xl font-extrabold text-slate-900 underline decoration-amber-400 decoration-4 underline-offset-8">
+                            BUDI SANTOSO
+                        </h2>
+                        <p id="certSchoolInfo" class="text-xs font-bold text-emerald-800 pt-1">
+                            SD NEGERI NUSANTARA 01 (KELAS 6 A)
+                        </p>
+                    </div>
+
+                    <!-- Reason Text -->
+                    <p class="text-xs sm:text-sm text-slate-600 max-w-2xl mx-auto leading-relaxed">
+                        Atas keberhasilannya menyelesaikan seluruh 50 Tantangan Kokurikuler <strong class="text-emerald-800">"Petualangan Peneliti Cilik: Mengukur dan Menganalisis Pertumbuhan Tanaman"</strong> dengan menunjukkan ketelitian tinggi, kemandirian penggunaan alat ukur, serta penalaran kritis analisis data.
+                    </p>
+
+                    <!-- Score Box inside Certificate -->
+                    <div class="inline-flex items-center gap-6 bg-slate-50 border border-slate-200 px-6 py-3 rounded-2xl">
+                        <div class="text-left">
+                            <span class="text-[10px] text-slate-500 uppercase font-bold block">NILAI CAPAIAN</span>
+                            <span id="certScore" class="font-heading font-extrabold text-lg text-emerald-700">480 / 500</span>
+                        </div>
+                        <div class="h-8 w-px bg-slate-200"></div>
+                        <div class="text-left">
+                            <span class="text-[10px] text-slate-500 uppercase font-bold block">PERSENTASE</span>
+                            <span id="certPercent" class="font-heading font-extrabold text-lg text-teal-700">96%</span>
+                        </div>
+                        <div class="h-8 w-px bg-slate-200"></div>
+                        <div class="text-left">
+                            <span class="text-[10px] text-slate-500 uppercase font-bold block">PREDIKAT</span>
+                            <span id="certPredicate" class="font-heading font-extrabold text-sm text-amber-600">PENELITI BERPRESTASI</span>
+                        </div>
+                    </div>
+
+                    <!-- Footer Signatures -->
+                    <div class="grid grid-cols-2 gap-8 pt-6 max-w-xl mx-auto text-xs">
+                        <div class="text-center space-y-8">
+                            <p id="certDate" class="text-slate-500 font-semibold">Tanggal: 29 September 2026</p>
+                            <div class="border-b-2 border-slate-800 w-36 mx-auto"></div>
+                            <p class="font-bold text-slate-800">Guru Pendamping Sains</p>
+                        </div>
+
+                        <div class="text-center space-y-8">
+                            <p class="text-slate-500 font-semibold">Tim Pengembang Pembelajaran</p>
+                            <div class="font-heading text-emerald-700 font-bold italic text-base">
+                                Prof. Flora & Team
+                            </div>
+                            <div class="border-b-2 border-slate-800 w-36 mx-auto"></div>
+                            <p class="font-bold text-slate-800">Tim Kokurikuler SD</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL: INSTRUCTIONS -->
+    <div id="modalInstructions" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-lg w-full shadow-2xl border-2 border-emerald-300 space-y-4">
+            <div class="flex justify-between items-center border-b pb-3 border-slate-100">
+                <h3 class="font-heading text-xl font-bold text-emerald-900 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-info text-emerald-600"></i> PETUNJUK PERMAINAN
+                </h3>
+                <button onclick="closeInstructionsModal()" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold flex items-center justify-center">✕</button>
+            </div>
+
+            <div class="space-y-3 text-xs sm:text-sm text-slate-600 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
+                <p>1. 📝 <strong>Identitas Siswa:</strong> Isilah nama lengkap, sekolah, dan kelas sebelum mulai.</p>
+                <p>2. 🌱 <strong>Materi Belajar:</strong> Kamu dapat membaca 5 modul interaktif terlebih dahulu agar menguasai materi pengukuran.</p>
+                <p>3. 🎯 <strong>Mode Petualangan:</strong> Terdapat 5 Level (50 Soal Pilihan Ganda). Setiap soal bernilai 10 Poin. Total maksimal 500 Poin.</p>
+                <p>4. 🪄 <strong>Bantuan 50:50:</strong> Kamu memiliki 3 kesempatan bantuan untuk menghapus 2 pilihan jawaban yang salah.</p>
+                <p>5. 🔊 <strong>Suara Soal:</strong> Klik tombol "Baca Soal" untuk mendengarkan teks soal dibacakan otomatis.</p>
+                <p>6. 📜 <strong>Sertifikat:</strong> Selesaikan seluruh 50 soal untuk mengklaim sertifikat digital resmi yang dapat dicetak/disimpan PDF!</p>
+            </div>
+
+            <button onclick="closeInstructionsModal()" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-heading font-bold text-sm rounded-xl transition">
+                SAYA MENGERTI!
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: DETAILED REVIEW REPORT -->
+    <div id="modalReview" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-4xl w-full shadow-2xl border-2 border-emerald-300 space-y-4 max-h-[90vh] flex flex-col">
+            <div class="flex justify-between items-center border-b pb-3 border-slate-100">
+                <h3 class="font-heading text-xl font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-emerald-600"></i> LAPORAN EVALUASI JAWABAN (50 SOAL)
+                </h3>
+                <button onclick="closeReviewModal()" class="w-8 h-8 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full font-bold flex items-center justify-center">✕</button>
+            </div>
+
+            <div class="flex-grow overflow-y-auto space-y-3 pr-2 text-xs" id="reviewContainer">
+                <!-- Injected via JS -->
+            </div>
+
+            <div class="pt-3 border-t flex justify-end">
+                <button onclick="closeReviewModal()" class="px-5 py-2.5 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl text-xs">
+                    TUTUP REKAP
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-500 font-medium">
+        <p>© 2026 Petualangan Peneliti Cilik - Kokurikuler IPA Kelas 6 SD. Dikembangkan untuk Pembelajaran Interaktif.</p>
+    </footer>
+
+    <script>
+        // GLOBAL GAME STATE
+        let studentData = { name: '', school: '', studentClass: '' };
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let correctCount = 0;
+        let wrongCount = 0;
+        let starsCount = 3;
+        let lifelinesLeft = 3;
+        let userAnswers = []; // Store student's chosen answer indices
+        let isAudioMuted = false;
+        let activeModuleIndex = 1;
+        let gameStartTime = null;
+
+        // WEB AUDIO SYNTHESIZER
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new AudioCtx();
+            }
+        }
+
+        function playSoundTone(freq, type, duration) {
+            if (isAudioMuted) return;
+            try {
+                initAudio();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type || 'sine';
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch (e) {
+                console.log('Audio init error:', e);
+            }
+        }
+
+        function playCorrectSound() {
+            playSoundTone(523.25, 'sine', 0.15); // C5
+            setTimeout(() => playSoundTone(659.25, 'sine', 0.15), 100); // E5
+            setTimeout(() => playSoundTone(783.99, 'sine', 0.3), 200); // G5
+        }
+
+        function playWrongSound() {
+            playSoundTone(220, 'sawtooth', 0.2);
+            setTimeout(() => playSoundTone(180, 'sawtooth', 0.3), 150);
+        }
+
+        function playStarSound() {
+            playSoundTone(880, 'sine', 0.1);
+            setTimeout(() => playSoundTone(1174.66, 'sine', 0.2), 80);
+        }
+
+        function playLevelUpSound() {
+            playSoundTone(440, 'triangle', 0.1);
+            setTimeout(() => playSoundTone(554.37, 'triangle', 0.1), 100);
+            setTimeout(() => playSoundTone(659.25, 'triangle', 0.1), 200);
+            setTimeout(() => playSoundTone(880, 'triangle', 0.4), 300);
+        }
+
+        function toggleAudio() {
+            isAudioMuted = !isAudioMuted;
+            const icon = document.getElementById('soundIcon');
+            if (isAudioMuted) {
+                icon.className = "fa-solid fa-volume-xmark text-red-500";
+            } else {
+                icon.className = "fa-solid fa-volume-high text-amber-700";
+                playSoundTone(600, 'sine', 0.1);
+            }
+        }
+
+        function readQuestionSpeech() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const currentQ = questionsData[currentQuestionIndex];
+                const text = currentQ.question;
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'id-ID';
+                utterance.rate = 0.95;
+                window.speechSynthesis.speak(utterance);
+            }
+        }
+
+        // DATABASE OF EXACTLY 50 MULTIPLE CHOICE QUESTIONS
+        const questionsData = [
+            // LEVEL 1: Detektif Alat Ukur (Q1 - Q10)
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C1 - Konsep Alat Ukur",
+                question: "1. Alat ukur baku manakah yang paling tepat digunakan untuk mengukur tinggi bibit kecambah berukuran 5 cm?",
+                options: ["Meteran gulung besar", "Penggaris (mistar)", "Tali rafia tanpa angka", "Jangka sorong mikro"],
+                correct: 1,
+                explanation: "Penggaris (mistar) sangat ideal untuk mengukur tanaman berukuran kecil (<30 cm) karena memiliki skala cm dan mm yang jelas."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C2 - Prosedur Pengukuran",
+                question: "2. Di manakah letak titik awal (angka 0) penggaris saat mengukur tinggi tanaman cabai?",
+                options: ["Di daun paling atas", "Di tengah-tengah batang", "Di pangkal batang perbatasan tanah", "Di ujung pot bagian luar"],
+                correct: 2,
+                explanation: "Pengukuran tinggi tanaman dimulai dari pangkal batang yang berbatasan tepat dengan permukaan tanah."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C2 - Ketelitian",
+                question: "3. Untuk menghindari kesalahan membaca skala (kesalahan paralaks), bagaimana posisi mata kita yang benar?",
+                options: ["Melihat miring dari sebelah kanan", "Tegak lurus (90°) tepat di atas garis skala", "Melihat dari arah bawah pot", "Melihat dari kejauhan 2 meter"],
+                correct: 1,
+                explanation: "Pandangan mata harus tegak lurus (90°) di atas garis skala agar pembacaan nilai tepat dan teliti."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C1 - Fungsi Alat Baku",
+                question: "4. Mengapa pengukuran pertumbuhan tanaman harus menggunakan alat ukur baku seperti penggaris, bukan jengkal tangan?",
+                options: ["Agar tanaman cepat berbuah", "Karena jengkal tangan setiap orang berbeda ukurannya", "Agar tidak perlu mencatat data", "Karena jengkal tangan selalu sama persis"],
+                correct: 1,
+                explanation: "Jengkal tangan adalah alat ukur tidak baku karena ukurannya bervariasi antar individu, sedangkan penggaris bersifat standar & konsisten."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C3 - Pemilihan Alat",
+                question: "5. Ani ingin mengukur tinggi tanaman jagung dewasa yang sudah mencapai tinggi 180 cm. Alat ukur apakah yang paling praktis?",
+                options: ["Penggaris plastik 15 cm", "Meteran pita / pita ukur", "Kaca pembesar", "Stopwatch"],
+                correct: 1,
+                explanation: "Meteran pita/gulung digunakan untuk mengukur objek yang tinggi/panjang (>30 cm) secara efisien."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C2 - Identifikasi Skala",
+                question: "6. Jarak antar garis terkecil pada penggaris plastik standar sekolah menunjukkan satuan...",
+                options: ["Meter (m)", "Desimeter (dm)", "Milimeter (mm)", "Kilometer (km)"],
+                correct: 2,
+                explanation: "Garis-garis terkecil pada penggaris adalah skala milimeter (mm)."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C3 - Ketelitian Pengukuran",
+                question: "7. Mengapa ujung tanaman yang paling atas (pucuk) menjadi batas akhir pengukuran tinggi tanaman?",
+                options: ["Karena pucuk merupakan titik tumbuh tertinggi tanaman", "Karena pucuk tempat tumbuhnya akar", "Agar pengukuran terlihat lebih pendek", "Karena pucuk selalu berwarna kuning"],
+                correct: 0,
+                explanation: "Tinggi tanaman diukur sampai pucuk daun/titik tumbuh tertinggi untuk mengetahui perkembangan puncak vegetatifnya."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C4 - Analisis Kesalahan",
+                question: "8. Budi mengukur tanaman dari angka 2 cm pada penggaris (bukan angka 0) dan pucuk berada di angka 10 cm. Berapa tinggi tanaman Budi sebenarnya?",
+                options: ["10 cm", "12 cm", "8 cm", "2 cm"],
+                correct: 2,
+                explanation: "Tinggi sebenarnya = Skala Akhir - Skala Awal = 10 cm - 2 cm = 8 cm."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C2 - Perawatan Alat",
+                question: "9. Penggaris yang bengkok atau terpotong ujung nolnya akan mengakibatkan...",
+                options: ["Data pengukuran menjadi sangat akurat", "Hasil pengukuran menjadi tidak teliti / tidak valid", "Tanaman tumbuh lebih cepat", "Skala cm berubah menjadi meter"],
+                correct: 1,
+                explanation: "Alat ukur yang rusak atau tidak tepat akan menghasilkan kesalahan sistematis dalam pengumpulan data."
+            },
+            {
+                level: 1,
+                levelTitle: "Detektif Alat Ukur",
+                category: "C1 - Definisi Pengukuran",
+                question: "10. Kegiatan membandingkan tinggi batang tanaman dengan skala angka baku dinamakan...",
+                options: ["Pengamatan warna", "Pengukuran", "Fotosintesis", "Penyerbukan"],
+                correct: 1,
+                explanation: "Pengukuran adalah membandingkan suatu besaran dengan besaran standar (satuan baku)."
+            },
+
+            // LEVEL 2: Ahli Satuan Panjang (Q11 - Q20)
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C2 - Konversi Satuan dasar",
+                question: "11. Hasil pengukuran tinggi bibit tomat menunjukkan angka 4 cm. Jika dinyatakan dalam milimeter (mm), tingginya adalah...",
+                options: ["4 mm", "40 mm", "400 mm", "0,4 mm"],
+                correct: 1,
+                explanation: "1 cm = 10 mm. Maka 4 cm = 4 x 10 = 40 mm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C3 - Konversi Satuan mm ke cm",
+                question: "12. Penggaris menunjukkan panjang daun mangga adalah 150 mm. Nilai ini sama dengan...",
+                options: ["1,5 cm", "15 cm", "150 cm", "1500 cm"],
+                correct: 1,
+                explanation: "10 mm = 1 cm. Maka 150 mm : 10 = 15 cm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C3 - Pengukuran Campuran",
+                question: "13. Tinggi bibit kacang hijau adalah 8 cm lebih 5 mm. Jika ditulis dalam bentuk desimal sentimeter adalah...",
+                options: ["8,5 cm", "85 cm", "0,85 cm", "850 cm"],
+                correct: 0,
+                explanation: "5 mm = 0,5 cm. Maka 8 cm + 0,5 cm = 8,5 cm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C3 - Konversi Perkalian",
+                question: "14. Tanaman hias kelompok A memiliki tinggi 24,5 cm. Berapakah tinggi tanaman tersebut dalam satuan mm?",
+                options: ["2,45 mm", "24,5 mm", "245 mm", "2450 mm"],
+                correct: 2,
+                explanation: "24,5 cm x 10 = 245 mm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C4 - Membandingkan Satuan",
+                question: "15. Tanaman X tingginya 120 mm, sedangkan Tanaman Y tingginya 14 cm. Manakah pernyataan yang benar?",
+                options: ["Tanaman X lebih tinggi dari Tanaman Y", "Tanaman Y lebih tinggi dari Tanaman X", "Keduanya memiliki tinggi yang sama persis", "Tanaman X tingginya dua kali Tanaman Y"],
+                correct: 1,
+                explanation: "Tanaman X = 120 mm = 12 cm. Tanaman Y = 14 cm. Maka Tanaman Y (14 cm) > Tanaman X (12 cm)."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C3 - Perhitungan Selisih Satuan",
+                question: "16. Selisih antara tinggi tanaman 30 cm dan 250 mm adalah...",
+                options: ["5 cm", "50 cm", "5 mm", "10 cm"],
+                correct: 0,
+                explanation: "250 mm = 25 cm. Selisih = 30 cm - 25 cm = 5 cm (atau 50 mm)."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C2 - Konversi Ratusan",
+                question: "17. Bibit kangkung bertambah tinggi 350 mm dalam dua minggu. Berapa cm pertambahan tersebut?",
+                options: ["3,5 cm", "35 cm", "350 cm", "0,35 cm"],
+                correct: 1,
+                explanation: "350 mm : 10 = 35 cm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C3 - Penjumlahan Satuan",
+                question: "18. Hasil penjumlahan tinggi tanaman 6 cm + 40 mm = ... cm.",
+                options: ["46 cm", "10 cm", "100 cm", "64 cm"],
+                correct: 1,
+                explanation: "40 mm = 4 cm. Maka 6 cm + 4 cm = 10 cm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C4 - Analisis Pilihan",
+                question: "19. Ukuran tinggi tanaman berikut manakah yang PENGUKURANNYA PALING PANJANG?",
+                options: ["18 cm", "175 mm", "1,5 dm", "160 mm"],
+                correct: 0,
+                explanation: "18 cm = 180 mm. 175 mm = 17,5 cm. 1,5 dm = 15 cm. 160 mm = 16 cm. Jadi yang paling panjang adalah 18 cm."
+            },
+            {
+                level: 2,
+                levelTitle: "Ahli Satuan Panjang",
+                category: "C3 - Operasi Campuran",
+                question: "20. Sebuah tunas bambu berukuran 0,5 meter. Berapakah tinggi tunas tersebut jika dinyatakan dalam sentimeter (cm)?",
+                options: ["5 cm", "50 cm", "500 cm", "0,05 cm"],
+                correct: 1,
+                explanation: "1 meter = 100 cm. Maka 0,5 meter x 100 = 50 cm."
+            },
+
+            // LEVEL 3: Pengamat Pertumbuhan (Q21 - Q30)
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C3 - Menghitung Selisih Pertumbuhan",
+                question: "21. Hari Senin tinggi bibit cabai 6 cm. Hari Jumat tinggi cabai menjadi 14 cm. Berapakah pertambahan tingginya?",
+                options: ["20 cm", "8 cm", "10 cm", "6 cm"],
+                correct: 1,
+                explanation: "Pertambahan tinggi = Tinggi Akhir - Tinggi Awal = 14 cm - 6 cm = 8 cm."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C1 - Faktor Pertumbuhan",
+                question: "22. Faktor abiotik utama yang diperlukan tanaman untuk melakukan proses fotosintesis agar dapat bertambah tinggi adalah...",
+                options: ["Cahaya matahari dan air", "Plastik dan minyak", "Pupuk kimia berlebihan", "Ruang gelap tanpa udara"],
+                correct: 0,
+                explanation: "Air dan cahaya matahari adalah faktor abiotik vital fotosintesis untuk menghasilkan energi pertumbuhan."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C3 - Laju Pertumbuhan Rata-Rata",
+                question: "23. Tanaman jagung bertambah tinggi 12 cm dalam waktu 4 hari. Berapakah pertambahan tinggi rata-rata per hari?",
+                options: ["2 cm/hari", "3 cm/hari", "4 cm/hari", "48 cm/hari"],
+                correct: 1,
+                explanation: "Laju per hari = Total Pertambahan : Jumlah Hari = 12 cm : 4 hari = 3 cm/hari."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C4 - Analisis Gejala Tanaman",
+                question: "24. Tanaman yang diletakkan di dalam kardus gelap tumbuh sangat cepat tetapi batangnya kurus pucat dan lemah. Fenomena ini disebut...",
+                options: ["Fotosintesis sempurna", "Etiolasi", "Gigantisme hijau", "Dormansi biji"],
+                correct: 1,
+                explanation: "Etiolasi adalah pertumbuhan cepat memanjang di tempat gelap akibat hormon auksin tidak terurai, namun kondisi tanaman pucat & lemah."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C3 - Prediksi Pertumbuhan",
+                question: "25. Jika sebuah bibit bertambah tinggi secara konstan 2 cm setiap hari, berapa tinggi tanaman pada hari ke-5 jika tinggi awal (hari 0) adalah 3 cm?",
+                options: ["10 cm", "13 cm", "15 cm", "8 cm"],
+                correct: 1,
+                explanation: "Tinggi hari ke-5 = Tinggi Awal + (5 hari x 2 cm) = 3 cm + 10 cm = 13 cm."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C2 - Ciri Ciri Pertumbuhan",
+                question: "26. Ciri utama yang membuktikan bahwa tanaman mengalami PERTUMBUHAN adalah...",
+                options: ["Daunnya bertambah banyak dan batang bertambah tinggi", "Warna pot berubah hijau", "Tanaman bisa berpindah tempat sendiri", "Jumlah tanah di pot bertambah"],
+                correct: 0,
+                explanation: "Pertumbuhan ditandai dengan penambahan ukuran fisik seperti tinggi batang, jumlah daun, dan massa tanaman."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C3 - Pengamatan Berkala",
+                question: "27. Mengapa pengamatan pertumbuhan tanaman sebaiknya dilakukan secara berkala pada jam yang sama setiap harinya?",
+                options: ["Agar tanaman tidak marah", "Agar data pengamatan akurat dan memenuhi kondisi variabel kontrol waktu", "Agar tanaman cepat berbuah dalam semalam", "Agar penggaris tidak aus"],
+                correct: 1,
+                explanation: "Pengamatan pada waktu yang tetap menjaga konsistensi selang interval waktu data yang diambil."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C4 - Perbandingan Dua Tanaman",
+                question: "28. Tanaman A disiram air cukup (pertambahan 10 cm). Tanaman B tidak disiram (pertambahan 1 cm). Kesimpulannya adalah...",
+                options: ["Air memperlambat tinggi tanaman", "Air sangat dibutuhkan untuk pertumbuhan optimal tanaman", "Tanaman B lebih sehat dari A", "Air tidak berpengaruh apa-apa"],
+                correct: 1,
+                explanation: "Data menunjukkan tanaman yang disiram cukup bertambah tinggi jauh lebih pesat daripada yang kekurangan air."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C3 - Menghitung mm ke cm dalam Waktu",
+                question: "29. Hari ke-1 tinggi = 20 mm. Hari ke-7 tinggi = 90 mm. Pertambahan tinggi dalam sentimeter (cm) adalah...",
+                options: ["70 cm", "7 cm", "700 cm", "0,7 cm"],
+                correct: 1,
+                explanation: "Pertambahan = 90 mm - 20 mm = 70 mm. Konversi ke cm = 70 mm : 10 = 7 cm."
+            },
+            {
+                level: 3,
+                levelTitle: "Pengamat Pertumbuhan",
+                category: "C2 - Peran Unsur Hara",
+                question: "30. Pemberian pupuk kompost pada media tanah bertujuan untuk memberikan...",
+                options: ["Sinar matahari buatan", "Unsur hara dan nutrisi tanaman", "Udara karbondioksida", "Air hujan sintesis"],
+                correct: 1,
+                explanation: "Pupuk kompos kaya akan unsur hara organik yang dibutuhkan tanaman untuk tumbuh subur."
+            },
+
+            // LEVEL 4: Analis Data Cilik (Q31 - Q40)
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Membaca Tabel Data",
+                hasTable: true,
+                tableData: {
+                    headers: ["Hari Pengamatan", "Tinggi Tanaman Mawar"],
+                    rows: [["Hari ke-1", "3 cm"], ["Hari ke-3", "7 cm"], ["Hari ke-5", "12 cm"], ["Hari ke-7", "18 cm"]]
+                },
+                question: "31. Berdasarkan tabel di atas, berapa pertambahan tinggi tanaman dari Hari ke-1 hingga Hari ke-7?",
+                options: ["15 cm", "18 cm", "21 cm", "12 cm"],
+                correct: 0,
+                explanation: "Pertambahan = Hari ke-7 (18 cm) - Hari ke-1 (3 cm) = 15 cm."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Analisis Laju Pertumbuhan Tertinggi",
+                hasTable: true,
+                tableData: {
+                    headers: ["Interval Hari", "Tinggi Awal", "Tinggi Akhir", "Pertambahan"],
+                    rows: [["Hari 1 - 3", "2 cm", "5 cm", "3 cm"], ["Hari 3 - 5", "5 cm", "10 cm", "5 cm"], ["Hari 5 - 7", "10 cm", "17 cm", "7 cm"]]
+                },
+                question: "32. Pada interval hari manakah tanaman mengalami pertambahan tinggi PALING PESAT?",
+                options: ["Hari 1 - 3", "Hari 3 - 5", "Hari 5 - 7", "Semua interval sama"],
+                correct: 2,
+                explanation: "Interval Hari 5 - 7 memiliki pertambahan terbesar yaitu 7 cm."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Menentukan Tanaman Terendah",
+                hasTable: true,
+                tableData: {
+                    headers: ["Nama Pot", "Jenis Pupuk", "Tinggi Hari ke-10"],
+                    rows: [["Pot A", "Kandang", "25 cm"], ["Pot B", "NPT", "28 cm"], ["Pot C", "Tanpa Pupuk", "14 cm"], ["Pot D", "Kompos", "22 cm"]]
+                },
+                question: "33. Berdasarkan tabel di atas, tanaman pada pot manakah yang memiliki pertumbuhan terendah?",
+                options: ["Pot A", "Pot B", "Pot C", "Pot D"],
+                correct: 2,
+                explanation: "Pot C tanpa pupuk hanya mencapai tinggi 14 cm, terendah dibanding pot lainnya."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C5 - Evaluasi Kesimpulan Tabel",
+                hasTable: true,
+                tableData: {
+                    headers: ["Hari", "Pot Cahaya Penuh", "Pot Cahaya Redup"],
+                    rows: [["Hari 1", "4 cm", "4 cm"], ["Hari 5", "10 cm", "7 cm"], ["Hari 10", "18 cm", "11 cm"]]
+                },
+                question: "34. Manakah kesimpulan ilmiah yang PALING TEPAT berdasarkan tabel pertumbuhan di atas?",
+                options: ["Cahaya redup mempercepat pertumbuhan", "Intensitas cahaya penuh mendukung pertumbuhan tinggi optimal", "Cahaya tidak berpengaruh pada tinggi tanaman", "Kedua pot mati pada hari ke-10"],
+                correct: 1,
+                explanation: "Pot dengan cahaya penuh mencapai 18 cm, lebih tinggi dari redup (11 cm), membuktikan cahaya penuh mendukung pertumbuhan optimal."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Menghitung Selisih Dua Kelompok",
+                hasTable: true,
+                tableData: {
+                    headers: ["Kelompok", "Tinggi Awal", "Tinggi Akhir (Hari 14)"],
+                    rows: [["Kelompok Air Keran", "5 cm", "20 cm"], ["Kelompok Air Deterjen", "5 cm", "6 cm"]]
+                },
+                question: "35. Berapakah selisih pertambahan tinggi antara Kelompok Air Keran dan Air Deterjen?",
+                options: ["14 cm", "15 cm", "1 cm", "20 cm"],
+                correct: 0,
+                explanation: "Pertambahan Keran = 20 - 5 = 15 cm. Pertambahan Deterjen = 6 - 5 = 1 cm. Selisih = 15 - 1 = 14 cm."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Menemukan Pola Angka",
+                question: "36. Data tinggi tanaman: Hari-1 (2 cm), Hari-2 (4 cm), Hari-3 (6 cm), Hari-4 (8 cm). Berapakah perkiraan tinggi pada Hari ke-6 jika pola berlanjut?",
+                options: ["10 cm", "12 cm", "14 cm", "16 cm"],
+                correct: 1,
+                explanation: "Pola bertambah 2 cm/hari. Hari-5 = 10 cm, Hari-6 = 12 cm."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Deteksi Data Anomali",
+                question: "37. Pengamatan tinggi bibit: Hari 1 (3 cm), Hari 2 (5 cm), Hari 3 (2 cm), Hari 4 (9 cm). Data hari manakah yang mencurigakan (salah ukur)?",
+                options: ["Hari 1", "Hari 2", "Hari 3", "Hari 4"],
+                correct: 2,
+                explanation: "Tinggi tanaman yang hidup tidak mungkin berkurang dari 5 cm menjadi 2 cm tanpa dipotong. Hari 3 mengalami kesalahan ukur."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Analisis Rata Rata Tabel",
+                hasTable: true,
+                tableData: {
+                    headers: ["Sampel", "Tinggi Tanaman (cm)"],
+                    rows: [["Tanaman 1", "10 cm"], ["Tanaman 2", "12 cm"], ["Tanaman 3", "14 cm"]]
+                },
+                question: "38. Berapakah nilai rata-rata tinggi dari 3 sampel tanaman pada tabel di atas?",
+                options: ["10 cm", "12 cm", "14 cm", "36 cm"],
+                correct: 1,
+                explanation: "Rata-rata = (10 + 12 + 14) / 3 = 36 / 3 = 12 cm."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C5 - Penilaian Grafik/Tabel",
+                question: "39. Mengapa peneliti cilik perlu membuat ringkasan tabel data pertumbuhan sebelum menyusun laporan akhir?",
+                options: ["Agar kertas laporan penuh", "Memudahkan pembaca melihat perkembangan data secara jelas dan sistematis", "Agar angka tinggi tanaman berubah sendiri", "Untuk menyembunyikan data yang salah"],
+                correct: 1,
+                explanation: "Tabel menyajikan data yang rumit menjadi ringkas, mudah dibaca, dan sistematis."
+            },
+            {
+                level: 4,
+                levelTitle: "Analis Data Cilik",
+                category: "C4 - Mengubah Satuan Tabel",
+                hasTable: true,
+                tableData: {
+                    headers: ["Hari", "Tinggi (cm)"],
+                    rows: [["Hari 1", "1,2 cm"], ["Hari 2", "2,5 cm"]]
+                },
+                question: "40. Jika data Hari 2 pada tabel (2,5 cm) diubah ke satuan milimeter, nilainya adalah...",
+                options: ["0,25 mm", "25 mm", "250 mm", "2500 mm"],
+                correct: 1,
+                explanation: "2,5 cm x 10 = 25 mm."
+            },
+
+            // LEVEL 5: Ilmuwan Muda Hebat (Q41 - Q50) - HOTS & Problem Solving
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C5 - Studi Kasus Eksperimen",
+                question: "41. Siti menguji pengaruh 3 jenis air (air sumur, air sabun, air teh) terhadap tinggi tanaman. Variabel bebas (kondisi yang diubah-ubah) eksperimen ini adalah...",
+                options: ["Tinggi tanaman", "Jenis air yang diramkan", "Jenis pot yang digunakan", "Jumlah tanah"],
+                correct: 1,
+                explanation: "Variabel bebas adalah faktor yang sengaja diubah/diberikan perlakuan berbeda, yaitu jenis air."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C6 - Merancang Penelitian",
+                question: "42. Edo ingin membuktikan bahwa pupuk organik lebih baik dari pupuk buatan. Langkah awal kemandirian sains yang tepat adalah...",
+                options: ["Menebak hasil tanpa mengukur", "Menyiapkan tanaman sejenis, mengukur tinggi awal, dan memberi perlakuan berimbang", "Langsung menulis laporan akhir", "Menyiram tanaman dengan minyak goreng"],
+                correct: 1,
+                explanation: "Langkah ilmiah mandiri dimulai dengan menyiapkan sampel sejenis, mengukur tinggi awal (baseline data), dan menjaga variabel terkontrol."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C5 - Memecahkan Masalah Pengukuran",
+                question: "43. Penggaris plastik milik Rina patah di bagian depan sehingga angka 0 sampai 3 cm hilang. Rina mengukur dari angka 4 cm dan pucuk menunjuk angka 19 cm. Berapa tinggi sebenarnya?",
+                options: ["19 cm", "15 cm", "23 cm", "4 cm"],
+                correct: 1,
+                explanation: "Tinggi = Skala Akhir - Skala Awal = 19 cm - 4 cm = 15 cm."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C6 - Evaluasi Hipotesis",
+                question: "44. Hipotesis: 'Makin banyak air disiram, makin tinggi tanaman.' Data menunjukkan disiram 1 gelas = tinggi 20 cm, disiram 10 gelas = tanaman membusuk dan tinggi 5 cm. Kesimpulannya adalah...",
+                options: ["Hipotesis terbukti benar", "Hipotesis ditolak, air berlebihan justru merusak akar dan menghambat tinggi tanaman", "Tanaman sangat menyukai 10 gelas air", "Air tidak berpengaruh"],
+                correct: 1,
+                explanation: "Penyiraman berlebihan menyebabkan pembusukan akar, sehingga hipotesis ditolak oleh data pengamatan."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C4 - Analisis Laju Pertumbuhan Komparatif",
+                hasTable: true,
+                tableData: {
+                    headers: ["Hari", "Tanaman Kacang Merah", "Tanaman Kacang Hijau"],
+                    rows: [["Hari 1", "1 cm (10 mm)", "1 cm (10 mm)"], ["Hari 7", "15 cm (150 mm)", "22 cm (220 mm)"]]
+                },
+                question: "45. Berdasarkan data 7 hari di atas, manakah tanaman yang memiliki laju pertumbuhan terpesat?",
+                options: ["Kacang Merah", "Kacang Hijau", "Keduanya sama pesat", "Tidak ada yang tumbuh"],
+                correct: 1,
+                explanation: "Kacang hijau bertambah 21 cm (22-1), sedangkan kacang merah bertambah 14 cm (15-1)."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C5 - Sikap Ilmiah",
+                question: "46. Ketika hasil pengukuran tanaman temannya berbeda jauh dengan miliknya, sikap penalaran kritis yang benar adalah...",
+                options: ["Menyalah-nyalahkan teman", "Mengubah angka data sendiri agar sama dengan teman", "Mengulang pengukuran bersama dengan teliti dan memeriksa letak kesalahan", "Menghapus semua data"],
+                correct: 2,
+                explanation: "Sikap peneliti sejati adalah bersikap jujur pada data, verifikasi ulang dengan mengukur bersama secara teliti."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C6 - Mengatasi Gangguan Pengukuran",
+                question: "47. Batang tanaman cabai tumbuh membengkok karena tertiup angin. Bagaimana cara terbaik mengukur tinggi sebenarnya?",
+                options: ["Mengukur garis lurus saja tanpa mengikuti lekuk", "Menggunakan benang mengikuti lekuk batang dari pangkal ke pucuk, lalu mengukur panjang benang di penggaris", "Mematahkan batang agar lurus", "Memperkirakan angka sembarangan"],
+                correct: 1,
+                explanation: "Menggunakan bantuan benang yang meliuk mengikuti batang lalu diluruskan di atas penggaris memberikan pengukuran panjang yang akurat."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C5 - Integritas Data",
+                question: "48. Mengapa peneliti cilik DILARANG keras memanipulasi (mengubah-ubah) angka hasil pengukuran pertumbuhan tanaman?",
+                options: ["Agar mendapat pujian", "Karena laporan sains harus jujur sesuai kenyataan empiris objektif", "Agar nilai menjadi 100", "Karena penggaris bisa rusak"],
+                correct: 1,
+                explanation: "Integritas dan kejujuran ilmiah adalah prinsip utama dalam penelitian sains."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C4 - Analisis Laju mm/hari",
+                question: "49. Dalam 5 hari, bibit kedelai bertambah tinggi dari 20 mm menjadi 120 mm. Berapakah pertambahan tinggi rata-rata per hari dalam sentimeter (cm)?",
+                options: ["2 cm/hari", "10 cm/hari", "20 cm/hari", "1 cm/hari"],
+                correct: 0,
+                explanation: "Pertambahan = 120 mm - 20 mm = 100 mm = 10 cm. Laju per hari = 10 cm / 5 hari = 2 cm/hari."
+            },
+            {
+                level: 5,
+                levelTitle: "Ilmuwan Muda Hebat",
+                category: "C6 - Kesimpulan Akhir Penelitian",
+                question: "50. Setelah 30 hari mengukur dan menganalisis data pertumbuhan tanaman, kesimpulan umum yang diperoleh Peneliti Cilik adalah...",
+                options: ["Tanaman tumbuh tanpa memerlukan faktor lingkungan", "Pengukuran baku dan pengamatan berkala menghasilkan data akurat untuk memahami pola pertumbuhan tanaman", "Penggaris tidak berguna untuk sains", "Tinggi tanaman akan selalu sama selamanya"],
+                correct: 1,
+                explanation: "Pengukuran baku yang cermat dan berkala memungkinkan siswa menganalisis dan menyimpulkan pola pertumbuhan tanaman secara ilmiah."
+            }
+        ];
+
+        // NAVIGATION & SCREEN SWITCHING
+        function showScreen(screenId) {
+            const screens = ['screenHome', 'screenMateri', 'screenQuiz', 'screenResults', 'screenCertificate'];
+            screens.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('hidden');
+            });
+            const target = document.getElementById(screenId);
+            if (target) target.classList.remove('hidden');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function goHomeIfAllowed() {
+            if (currentQuestionIndex > 0 && currentQuestionIndex < 49) {
+                if (confirm("Petualangan sedang berlangsung. Yakin ingin kembali ke menu awal? Progress Anda tersimpan.")) {
+                    showScreen('screenHome');
+                }
+            } else {
+                showScreen('screenHome');
+            }
+        }
+
+        function startAdventure() {
+            const name = document.getElementById('inputStudentName').value.trim();
+            const school = document.getElementById('inputSchoolName').value.trim();
+            const sClass = document.getElementById('inputStudentClass').value;
+
+            if (!name || !school) {
+                alert("Harap isi Nama Lengkap dan Nama Sekolahmu terlebih dahulu!");
+                return;
+            }
+
+            studentData = { name, school, studentClass: sClass };
+            document.getElementById('navUserName').innerText = name.split(' ')[0];
+            document.getElementById('navUserBadge').classList.remove('hidden');
+
+            // Reset or restore progress
+            currentQuestionIndex = 0;
+            score = 0;
+            correctCount = 0;
+            wrongCount = 0;
+            starsCount = 3;
+            lifelinesLeft = 3;
+            userAnswers = [];
+            gameStartTime = new Date();
+
+            document.getElementById('lifelineCount').innerText = lifelinesLeft;
+            document.getElementById('btnLifeline').disabled = false;
+            document.getElementById('btnLifeline').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            showScreen('screenQuiz');
+            loadQuestion(currentQuestionIndex);
+        }
+
+        // MODULE MATERI LOGIC
+        function openMateriScreen() {
+            showScreen('screenMateri');
+            switchModule(1);
+        }
+
+        function switchModule(modNum) {
+            activeModuleIndex = modNum;
+            for (let i = 1; i <= 5; i++) {
+                const body = document.getElementById(`moduleContent${i}`);
+                const tab = document.getElementById(`tabMod${i}`);
+                if (body) body.classList.add('hidden');
+                if (tab) {
+                    tab.className = "mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition text-slate-600 hover:text-emerald-700";
+                }
+            }
+            const activeBody = document.getElementById(`moduleContent${modNum}`);
+            const activeTab = document.getElementById(`tabMod${modNum}`);
+            if (activeBody) activeBody.classList.remove('hidden');
+            if (activeTab) {
+                activeTab.className = "mod-tab py-1.5 px-3 rounded-xl text-xs font-bold transition bg-emerald-600 text-white shadow";
+            }
+        }
+
+        function navigateModule(direction) {
+            let target = activeModuleIndex + direction;
+            if (target < 1) target = 1;
+            if (target > 5) target = 5;
+            switchModule(target);
+        }
+
+        function updateRulerSim() {
+            const val = document.getElementById('simRulerVal').value;
+            const mmVal = val * 10;
+            document.getElementById('simRulerText').innerText = `${val} cm = ${mmVal} mm`;
+            document.getElementById('simRulerBar').style.width = `${(val / 20) * 100}%`;
+            document.getElementById('simRulerBar').innerText = `🌱 ${val} cm`;
+        }
+
+        function checkPracticeCm() {
+            const val = parseFloat(document.getElementById('practiceCmInput').value);
+            const feedback = document.getElementById('practiceCmFeedback');
+            if (val === 155) {
+                feedback.innerHTML = "<span class='text-emerald-600'>✅ Tepat Sekali! 15,5 cm = 155 mm.</span>";
+                playCorrectSound();
+            } else {
+                feedback.innerHTML = "<span class='text-red-500'>❌ Coba lagi! Kalikan 15,5 dengan 10.</span>";
+                playWrongSound();
+            }
+        }
+
+        // QUIZ GAMEPLAY LOGIC
+        function loadQuestion(index) {
+            const q = questionsData[index];
+            
+            // Update HUD
+            document.getElementById('hudLevelNum').innerText = `L${q.level}`;
+            document.getElementById('hudLevelTitle').innerText = q.levelTitle;
+            document.getElementById('hudScore').innerText = `${score} / 500`;
+            document.getElementById('hudCorrect').innerText = correctCount;
+            document.getElementById('hudWrong').innerText = wrongCount;
+            document.getElementById('hudQIndex').innerText = index + 1;
+            
+            const pct = Math.round(((index + 1) / 50) * 100);
+            document.getElementById('hudProgressPercent').innerText = `${pct}%`;
+            document.getElementById('hudProgressBar').style.width = `${pct}%`;
+
+            // Reset Feedback & Controls
+            document.getElementById('feedbackBox').classList.add('hidden');
+            document.getElementById('mascotSpeech').innerText = getMascotPhrase(q.level);
+
+            // Populate Question
+            document.getElementById('qTagCategory').innerText = q.category;
+            document.getElementById('questionText').innerText = q.question;
+
+            // Optional Table Visual
+            const visualContainer = document.getElementById('qVisualContainer');
+            if (q.hasTable && q.tableData) {
+                visualContainer.classList.remove('hidden');
+                let html = `<table class="w-full text-left border-collapse rounded-lg overflow-hidden my-1">
+                    <thead><tr class="bg-emerald-600 text-white">`;
+                q.tableData.headers.forEach(h => {
+                    html += `<th class="p-2">${h}</th>`;
+                });
+                html += `</tr></thead><tbody class="divide-y divide-slate-200 bg-white">`;
+                q.tableData.rows.forEach(r => {
+                    html += `<tr>`;
+                    r.forEach(cell => { html += `<td class="p-2 font-medium">${cell}</td>`; });
+                    html += `</tr>`;
+                });
+                html += `</tbody></table>`;
+                visualContainer.innerHTML = html;
+            } else {
+                visualContainer.classList.add('hidden');
+                visualContainer.innerHTML = '';
+            }
+
+            // Options Grid
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+
+            const prefixes = ['A', 'B', 'C', 'D'];
+            q.options.forEach((optText, optIdx) => {
+                const btn = document.createElement('button');
+                btn.id = `optBtn_${optIdx}`;
+                btn.onclick = () => selectAnswer(optIdx);
+                btn.className = "opt-btn p-4 rounded-2xl border-2 border-slate-200 hover:border-emerald-400 bg-slate-50 hover:bg-emerald-50 text-left transition font-semibold text-slate-800 text-xs sm:text-sm flex items-center gap-3 shadow-sm";
+                
+                btn.innerHTML = `
+                    <span class="w-8 h-8 rounded-xl bg-white border-2 border-slate-300 text-slate-700 flex items-center justify-center font-bold text-xs flex-shrink-0 font-heading">
+                        ${prefixes[optIdx]}
+                    </span>
+                    <span class="flex-grow">${optText}</span>
+                `;
+                grid.appendChild(btn);
+            });
+        }
+
+        function selectAnswer(chosenIdx) {
+            const q = questionsData[currentQuestionIndex];
+            userAnswers[currentQuestionIndex] = chosenIdx;
+
+            // Disable all option buttons
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`optBtn_${i}`);
+                if (btn) btn.disabled = true;
+            }
+
+            const isCorrect = (chosenIdx === q.correct);
+            const feedbackBox = document.getElementById('feedbackBox');
+            const feedbackIcon = document.getElementById('feedbackIcon');
+            const feedbackTitle = document.getElementById('feedbackTitle');
+            const feedbackText = document.getElementById('feedbackText');
+
+            feedbackBox.classList.remove('hidden');
+
+            if (isCorrect) {
+                playCorrectSound();
+                score += 10;
+                correctCount++;
+                feedbackBox.className = "p-5 rounded-2xl border-2 border-emerald-300 bg-emerald-50 text-emerald-900 transition-all space-y-3";
+                feedbackIcon.className = "w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0";
+                feedbackIcon.innerHTML = "✓";
+                feedbackTitle.innerText = "Hebat! Pengamatanmu Teliti Sekali!";
+                document.getElementById('mascotSpeech').innerText = "Hebat! Pengamatanmu teliti sekali! Data adalah sumber pengetahuan!";
+            } else {
+                playWrongSound();
+                wrongCount++;
+                feedbackBox.className = "p-5 rounded-2xl border-2 border-amber-300 bg-amber-50 text-amber-900 transition-all space-y-3";
+                feedbackIcon.className = "w-10 h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white font-bold text-xl flex-shrink-0";
+                feedbackIcon.innerHTML = "✕";
+                feedbackTitle.innerText = "Tidak Apa-Apa! Ayo Belajar dan Coba Lagi!";
+                document.getElementById('mascotSpeech').innerText = "Tidak apa-apa! Teliti sebelum menjawab dan perhatikan pembahasannya!";
+                
+                // Highlight correct button
+                const correctBtn = document.getElementById(`optBtn_${q.correct}`);
+                if (correctBtn) {
+                    correctBtn.classList.add('border-emerald-500', 'bg-emerald-100');
+                }
+            }
+
+            feedbackText.innerText = q.explanation;
+            document.getElementById('hudScore').innerText = `${score} / 500`;
+            document.getElementById('hudCorrect').innerText = correctCount;
+            document.getElementById('hudWrong').innerText = wrongCount;
+        }
+
+        function nextQuestion() {
+            // Check for level transitions every 10 questions
+            if ((currentQuestionIndex + 1) % 10 === 0 && currentQuestionIndex < 49) {
+                showLevelUpModal();
+                return;
+            }
+
+            currentQuestionIndex++;
+            if (currentQuestionIndex < 50) {
+                loadQuestion(currentQuestionIndex);
+            } else {
+                finishGame();
+            }
+        }
+
+        function useLifeline5050() {
+            if (lifelinesLeft <= 0) return;
+            const q = questionsData[currentQuestionIndex];
+            
+            // Find wrong options
+            let wrongIndices = [];
+            for (let i = 0; i < 4; i++) {
+                if (i !== q.correct) wrongIndices.push(i);
+            }
+            
+            // Randomly hide 2 wrong options
+            wrongIndices.sort(() => Math.random() - 0.5);
+            const toHide = wrongIndices.slice(0, 2);
+
+            toHide.forEach(idx => {
+                const btn = document.getElementById(`optBtn_${idx}`);
+                if (btn) {
+                    btn.style.opacity = '0.2';
+                    btn.disabled = true;
+                }
+            });
+
+            lifelinesLeft--;
+            document.getElementById('lifelineCount').innerText = lifelinesLeft;
+            if (lifelinesLeft === 0) {
+                const btn = document.getElementById('btnLifeline');
+                btn.disabled = true;
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+            }
+            playStarSound();
+        }
+
+        function getMascotPhrase(level) {
+            const phrases = {
+                1: "Ayo Peneliti Cilik! Pastikan posisi penggaris lurus dari angka 0.",
+                2: "Ingat rumus ajaib: 1 cm = 10 mm. Dikalikan 10 ya!",
+                3: "Hitung selisih tinggi akhir dikurangi tinggi awal dengan cermat!",
+                4: "Baca tabel baris demi baris. Data adalah sumber pengetahuan!",
+                5: "Kamu semakin hebat! Gunakan penalaran kritis untuk menyelesaikan kasus!"
+            };
+            return phrases[level] || "Tetap semangat dan teliti!";
+        }
+
+        function showLevelUpModal() {
+            playLevelUpSound();
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+            
+            const curLvl = Math.floor(currentQuestionIndex / 10) + 1;
+            document.getElementById('lvlUpTitle').innerText = `LEVEL ${curLvl} SELESAI!`;
+            document.getElementById('lvlUpScore').innerText = score;
+            document.getElementById('modalLevelUp').classList.remove('hidden');
+        }
+
+        function closeLevelUpModal() {
+            document.getElementById('modalLevelUp').classList.add('hidden');
+            currentQuestionIndex++;
+            loadQuestion(currentQuestionIndex);
+        }
+
+        function openInstructionsModal() {
+            document.getElementById('modalInstructions').classList.remove('hidden');
+        }
+
+        function closeInstructionsModal() {
+            document.getElementById('modalInstructions').classList.add('hidden');
+        }
+
+        function finishGame() {
+            const endTime = new Date();
+            const diffSec = Math.floor((endTime - gameStartTime) / 1000);
+            const mins = Math.floor(diffSec / 60);
+            const secs = diffSec % 60;
+            const timeStr = `${mins}m ${secs}s`;
+
+            const percentage = Math.round((score / 500) * 100);
+
+            // Predicate determine
+            let predicate = "";
+            if (percentage >= 90) predicate = "PENELITI CILIK BERPRESTASI";
+            else if (percentage >= 80) predicate = "ILMUWAN MUDA HEBAT";
+            else if (percentage >= 70) predicate = "PENGAMAT TANAMAN CERDAS";
+            else if (percentage >= 60) predicate = "PENELITI YANG SEMAKIN TELITI";
+            else predicate = "TETAP SEMANGAT, AYO BELAJAR LAGI!";
+
+            // Update Results Screen
+            document.getElementById('resStudentName').innerText = `Selamat, ${studentData.name}!`;
+            document.getElementById('resSchoolInfo').innerText = `${studentData.school} • ${studentData.studentClass}`;
+            document.getElementById('resFinalScore').innerText = `${score} / 500`;
+            document.getElementById('resPercentage').innerText = `Persentase: ${percentage}%`;
+            document.getElementById('resPredicate').innerText = `🏆 ${predicate}`;
+            document.getElementById('resCorrect').innerText = `${correctCount} Soal`;
+            document.getElementById('resWrong').innerText = `${wrongCount} Soal`;
+            document.getElementById('resTime').innerText = timeStr;
+
+            // Certificate updates
+            document.getElementById('certStudentName').innerText = studentData.name.toUpperCase();
+            document.getElementById('certSchoolInfo').innerText = `${studentData.school.toUpperCase()} (${studentData.studentClass.toUpperCase()})`;
+            document.getElementById('certScore').innerText = `${score} / 500`;
+            document.getElementById('certPercent').innerText = `${percentage}%`;
+            document.getElementById('certPredicate').innerText = predicate;
+            
+            const today = new Date();
+            const dateOption = { year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('certDate').innerText = `Tanggal: ${today.toLocaleDateString('id-ID', dateOption)}`;
+
+            // Trigger confetti celebrate
+            confetti({ particleCount: 120, spread: 80, origin: { y: 0.5 } });
+
+            showScreen('screenResults');
+        }
+
+        function showCertificateScreen() {
+            showScreen('screenCertificate');
+        }
+
+        function resetGameAndPlayAgain() {
+            showScreen('screenHome');
+        }
+
+        function openReviewModal() {
+            const container = document.getElementById('reviewContainer');
+            container.innerHTML = '';
+
+            questionsData.forEach((q, idx) => {
+                const userAns = userAnswers[idx];
+                const isCorrect = (userAns === q.correct);
+
+                const card = document.createElement('div');
+                card.className = `p-4 rounded-2xl border ${isCorrect ? 'bg-emerald-50 border-emerald-200' : 'bg-red-50 border-red-200'} space-y-2`;
+                
+                const userChoiceText = (userAns !== undefined) ? q.options[userAns] : "Tidak Dijawab";
+                const correctChoiceText = q.options[q.correct];
+
+                card.innerHTML = `
+                    <div class="flex justify-between font-bold text-xs">
+                        <span class="${isCorrect ? 'text-emerald-800' : 'text-red-800'}">Soal #${idx + 1} (${q.category})</span>
+                        <span>${isCorrect ? '✅ Benar (+10)' : '❌ Salah (+0)'}</span>
+                    </div>
+                    <p class="font-semibold text-slate-800">${q.question}</p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                        <div class="p-2 rounded-lg bg-white border">Jawabanmu: <strong class="${isCorrect ? 'text-emerald-700' : 'text-red-600'}">${userChoiceText}</strong></div>
+                        <div class="p-2 rounded-lg bg-white border">Kunci Jawaban: <strong class="text-emerald-700">${correctChoiceText}</strong></div>
+                    </div>
+                    <p class="text-slate-600 text-[11px] italic bg-white/60 p-2 rounded-lg border">💡 ${q.explanation}</p>
+                `;
+                container.appendChild(card);
+            });
+
+            document.getElementById('modalReview').classList.remove('hidden');
+        }
+
+        function closeReviewModal() {
+            document.getElementById('modalReview').classList.add('hidden');
+        }
+
+        // Initialize default UI elements on window load
+        window.onload = function() {
+            console.log("Petualangan Peneliti Cilik Loaded Successfully.");
+        };
+    </script>
+</body>
+</html>
